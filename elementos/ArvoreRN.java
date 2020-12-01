@@ -4,6 +4,9 @@ import java.util.ArrayList;
 
 public class ArvoreRN {
     
+    private final int vermelho = 1;
+    private final int preto = 0;
+    
     private Arquivo raiz;
     
     public ArvoreRN(){
@@ -18,76 +21,129 @@ public class ArvoreRN {
         this.raiz = raiz;
     }
     
-    //Metódos especificos para a arvore AVL
-    private int altura(Arquivo arq){
-        if(arq == null)
-            return -1;
-        
-        return arq.getAlt();
+    //Metódos especificos para a arvore Rubro Negra
+    private Arquivo getPai(Arquivo arq){
+        if(arq != null)
+            return arq.getPai();
+        return null;
     }
     
-    private int fatorBalanceamento(Arquivo arq){
-        if(arq == null)
-            return 0;
-        
-        return altura(arq.getDireito()) - altura(arq.getEsquerdo());
+    private Arquivo getVo(Arquivo arq){
+        return getPai(getPai(arq));
     }
     
-    private Arquivo rotacaoDireita(Arquivo pai){
-        Arquivo filho = pai.getEsquerdo();
-        Arquivo neto = filho.getDireito();
+    private Arquivo getTio(Arquivo arq){
+        Arquivo vo = getVo(arq);
+        if(vo == null)
+            return null;
         
-        //Realiza a rotação
-        filho.setDireito(pai);
-        pai.setEsquerdo(neto);
+        Arquivo pai = getPai(arq);
         
-        //Atualiza a altura desses nós
-        pai.setAlt(Math.max(altura(pai.getEsquerdo()), altura(pai.getDireito())) + 1);
-        filho.setAlt(Math.max(altura(filho.getEsquerdo()), altura(filho.getDireito())) + 1);
-        
-        return filho;
+        if(pai.compareTo(vo) > 0)
+            return vo.getEsquerdo();
+        return vo.getDireito();
     }
     
-    private Arquivo rotacaoEsquerda(Arquivo pai){
-        Arquivo filho = pai.getDireito();
-        Arquivo neto = filho.getEsquerdo();
+    private void rotacaoDireita(Arquivo arq){
+        Arquivo filho = arq.getEsquerdo();
+        Arquivo pai = getPai(arq);
         
-        //Realiza a rotação
-        filho.setEsquerdo(pai);
-        pai.setDireito(neto);
-        
-        //Atualiza a altura desses nós
-        pai.setAlt(Math.max(altura(pai.getEsquerdo()), altura(pai.getDireito())) + 1);
-        filho.setAlt(Math.max(altura(filho.getEsquerdo()), altura(filho.getDireito())) + 1);
-        
-        return filho;
-    }
-    
-    private Arquivo balanceiaAVL(Arquivo arq){
-        arq.setAlt(Math.max(altura(arq.getEsquerdo()), altura(arq.getDireito())) + 1);
-        int fb = fatorBalanceamento(arq);
-        
-        if(fb > 1){
-            if(altura(arq.getDireito().getDireito()) > altura(arq.getDireito().getEsquerdo())){
-                //Rotação simples para a esquerda
-                arq = rotacaoEsquerda(arq);
-            }else{
-                //Rotação dupla para a esquerda
-                arq.setDireito(rotacaoDireita(arq.getDireito()));
-                arq = rotacaoEsquerda(arq);
+        try{
+            arq.setEsquerdo(filho.getDireito());
+            filho.setDireito(arq);
+            arq.setPai(filho);
+            
+            if(arq.getEsquerdo() != null){
+                arq.getEsquerdo().setPai(pai);
             }
-        }else if(fb < -1){
-            if(altura(arq.getEsquerdo().getEsquerdo()) > altura(arq.getEsquerdo().getDireito())){
-                //Rotação simples para a direita
-                arq = rotacaoDireita(arq);
-            }else{
-                //Rotação dupla para a direita
-                arq.setEsquerdo(rotacaoEsquerda(arq.getEsquerdo()));
-                arq = rotacaoDireita(arq);
+            
+            if(pai != null){
+                if(arq.equals(pai.getEsquerdo())){
+                    pai.setEsquerdo(filho);
+                }else if(arq.equals(pai.getDireito())){
+                    pai.setDireito(filho);
+                }
             }
+            filho.setPai(pai);
+        }catch (NullPointerException e){
+            //Caso tente fazer a rotação com um nó externo na árvore
+            return;
         }
+    }
+    
+    private void rotacaoEsquerda(Arquivo arq){
+        Arquivo filho = arq.getDireito();
+        Arquivo pai = getPai(arq);
         
-        return arq;
+        try{
+            arq.setDireito(filho.getEsquerdo());
+            filho.setEsquerdo(arq);
+            arq.setPai(filho);
+            
+            if(arq.getDireito()!= null){
+                arq.getDireito().setPai(pai);
+            }
+            
+            if(pai != null){
+                if(arq.equals(pai.getEsquerdo())){
+                    pai.setEsquerdo(filho);
+                }else if(arq.equals(pai.getDireito())){
+                    pai.setDireito(filho);
+                }
+            }
+            filho.setPai(pai);
+        }catch (NullPointerException e){
+            //Caso tente fazer a rotação com um nó externo na árvore
+            return;
+        }
+    }
+    
+    private void trocarCor(Arquivo arq){
+        getPai(arq).setCor(preto);
+        getTio(arq).setCor(preto);
+        getVo(arq).setCor(vermelho);
+    }
+    
+    private void balanceiaRN(Arquivo arq){
+        if(getPai(arq) == null){
+            //É a raiz, então só pinta o novo nó de preto
+            arq.setCor(preto);
+        }else if(getPai(arq).getCor() == preto){
+            //A regra da RN está valida, não faz nada
+            return;
+        }else if(getTio(arq) != null && getTio(arq).getCor() == vermelho){
+            //Inverte as cores
+            trocarCor(arq);
+            //Continua a verificação
+            balanceiaRN(getVo(arq));
+        }else{
+            //É necessário fazer uma rotação
+            Arquivo pai = getPai(arq);
+            Arquivo vo = getVo(arq);
+            
+            //Esses casos se aplicam se quando o nó está sendo o filho interno, então faz uma troca de posição
+            if(arq.equals(pai.getDireito()) && pai.equals(vo.getEsquerdo())){
+                rotacaoEsquerda(arq);
+                arq = arq.getEsquerdo();
+            }else if(arq.equals(pai.getEsquerdo()) && pai.equals(vo.getDireito())){
+                rotacaoDireita(arq);
+                arq = arq.getDireito();
+            }
+            
+            pai = getPai(arq);
+            vo = getVo(arq);
+            
+            //Rotação padrão com troca de cor depois
+            if(arq.equals(pai.getDireito())){
+                rotacaoEsquerda(vo);
+            }else{
+                rotacaoDireita(vo);
+            }
+            
+            pai.setCor(preto);
+            vo.setCor(vermelho);
+            
+        }
     }
     
     public Arquivo procuraArquivo(String chave){ //Serve mais para chamar o metodo recursivo
@@ -108,43 +164,51 @@ public class ArvoreRN {
     }
     
     public void addDiretorio(String chave){ //Serve mais para chamar o metodo recursivo
-        this.raiz = addDiretorioRec(this.raiz, chave);
+        this.raiz = addDiretorioRec(this.raiz, chave, null);
     }
     
-    private Arquivo addDiretorioRec(Arquivo raiz, String chave){
+    private Arquivo addDiretorioRec(Arquivo raiz, String chave, Arquivo pai){
         Arquivo atual = raiz;
         
         if(atual == null){ //Não existe, então cria um novo Diretório
             atual = new Diretorio(chave);
+            atual.setCor(vermelho);
+            atual.setPai(pai);
+            balanceiaRN(atual);
             return (Diretorio) atual;
         }
         
         if(chave.compareTo(atual.getChave()) < 0){
-            atual.setEsquerdo(addDiretorioRec(raiz.getEsquerdo(), chave));
+            atual.setEsquerdo(addDiretorioRec(raiz.getEsquerdo(), chave, atual));
         }else if(chave.compareTo(atual.getChave()) > 0){
-            atual.setDireito(addDiretorioRec(raiz.getDireito(), chave));
+            atual.setDireito(addDiretorioRec(raiz.getDireito(), chave, atual));
         }
-        return balanceiaAVL(atual);
+        
+        return atual;
     }
     
     public void addArquivo(String chave){ //Serve mais para chamar o metodo recursivo
-        this.raiz = addArquivoRec(this.raiz, chave);
+        this.raiz = addArquivoRec(this.raiz, chave, null);
     }
     
-    private Arquivo addArquivoRec(Arquivo raiz, String chave){
+    private Arquivo addArquivoRec(Arquivo raiz, String chave, Arquivo pai){
         Arquivo atual = raiz;
         
         if(atual == null){ //Não existe, então cria um novo Arquivo
             atual = new Arquivo(chave);
+            atual.setCor(vermelho);
+            atual.setPai(pai);
+            balanceiaRN(atual);
             return atual;
         }
         
         if(chave.compareTo(atual.getChave()) < 0){
-            atual.setEsquerdo(addArquivoRec(raiz.getEsquerdo(), chave));
+            atual.setEsquerdo(addArquivoRec(raiz.getEsquerdo(), chave, atual));
         }else if(chave.compareTo(atual.getChave()) > 0){
-            atual.setDireito(addArquivoRec(raiz.getDireito(), chave));
+            atual.setDireito(addArquivoRec(raiz.getDireito(), chave, atual));
         }
-        return balanceiaAVL(atual);
+        
+        return atual;
     }
     
     public Arquivo interpretaPath(String path){ //Serve mais para chamar o metodo recursivo
