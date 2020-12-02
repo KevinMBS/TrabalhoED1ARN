@@ -44,58 +44,44 @@ public class ArvoreRN {
         return vo.getDireito();
     }
     
-    private void rotacaoDireita(Arquivo arq){
-        Arquivo filho = arq.getEsquerdo();
-        Arquivo pai = getPai(arq);
+    private void rotacaoDireita(Arquivo pai){
+        Arquivo filho = pai.getEsquerdo();
         
-        try{
-            arq.setEsquerdo(filho.getDireito());
-            filho.setDireito(arq);
-            arq.setPai(filho);
-            
-            if(arq.getEsquerdo() != null){
-                arq.getEsquerdo().setPai(pai);
-            }
-            
-            if(pai != null){
-                if(arq.equals(pai.getEsquerdo())){
-                    pai.setEsquerdo(filho);
-                }else if(arq.equals(pai.getDireito())){
-                    pai.setDireito(filho);
-                }
-            }
-            filho.setPai(pai);
-        }catch (NullPointerException e){
-            //Caso tente fazer a rotação com um nó externo na árvore
-            return;
+        pai.setEsquerdo(filho.getDireito());
+        if(filho.getDireito()!= null){
+            filho.getDireito().setPai(pai);
         }
+        
+        filho.setPai(getPai(pai));
+        if(getPai(pai) == null){
+            this.raiz = filho;
+        }else if(pai.equals(getPai(pai).getDireito())){
+            getPai(pai).setDireito(filho);
+        }else{
+            getPai(pai).setEsquerdo(filho);
+        }
+        filho.setDireito(pai);
+        pai.setPai(filho);
     }
     
-    private void rotacaoEsquerda(Arquivo arq){
-        Arquivo filho = arq.getDireito();
-        Arquivo pai = getPai(arq);
+    private void rotacaoEsquerda(Arquivo pai){
+        Arquivo filho = pai.getDireito();
         
-        try{
-            arq.setDireito(filho.getEsquerdo());
-            filho.setEsquerdo(arq);
-            arq.setPai(filho);
-            
-            if(arq.getDireito()!= null){
-                arq.getDireito().setPai(pai);
-            }
-            
-            if(pai != null){
-                if(arq.equals(pai.getEsquerdo())){
-                    pai.setEsquerdo(filho);
-                }else if(arq.equals(pai.getDireito())){
-                    pai.setDireito(filho);
-                }
-            }
-            filho.setPai(pai);
-        }catch (NullPointerException e){
-            //Caso tente fazer a rotação com um nó externo na árvore
-            return;
+        pai.setDireito(filho.getEsquerdo());
+        if(filho.getEsquerdo() != null){
+            filho.getEsquerdo().setPai(pai);
         }
+        
+        filho.setPai(getPai(pai));
+        if(getPai(pai) == null){
+            this.raiz = filho;
+        }else if(pai.equals(getPai(pai).getEsquerdo())){
+            getPai(pai).setEsquerdo(filho);
+        }else{
+            getPai(pai).setDireito(filho);
+        }
+        filho.setEsquerdo(pai);
+        pai.setPai(filho);
     }
     
     private void trocarCor(Arquivo arq){
@@ -134,7 +120,7 @@ public class ArvoreRN {
             vo = getVo(arq);
             
             //Rotação padrão com troca de cor depois
-            if(arq.equals(pai.getDireito())){
+            if(arq.compareTo(pai) > 0){
                 rotacaoEsquerda(vo);
             }else{
                 rotacaoDireita(vo);
