@@ -149,52 +149,80 @@ public class ArvoreRN {
         return procuraArquivoRec(atual.getDireito(), chave);
     }
     
-    public void addDiretorio(String chave){ //Serve mais para chamar o metodo recursivo
-        this.raiz = addDiretorioRec(this.raiz, chave, null);
+    public void addDiretorio(String chave){
+        Diretorio novoDir = new Diretorio(chave);
+        
+        addDiretorioRec(this.raiz, novoDir);
+        
+        while(getPai(novoDir) != null){
+            novoDir = (Diretorio)getPai(novoDir);
+        }
+        
+        this.raiz = novoDir;
     }
     
-    private Arquivo addDiretorioRec(Arquivo raiz, String chave, Arquivo pai){
-        Arquivo atual = raiz;
-        
-        if(atual == null){ //Não existe, então cria um novo Diretório
-            atual = new Diretorio(chave);
-            atual.setCor(vermelho);
-            atual.setPai(pai);
-            balanceiaRN(atual);
-            return (Diretorio) atual;
+    private void addDiretorioRec(Arquivo raiz, Arquivo novoDir){
+        if(raiz != null){
+            if(novoDir.compareTo(raiz) < 0){
+                if(raiz.getEsquerdo() != null){
+                    addDiretorioRec(raiz.getEsquerdo(), novoDir);
+                    return;
+                }else{
+                    raiz.setEsquerdo(novoDir);
+                }
+            }else{
+                if(raiz.getDireito()!= null){
+                    addDiretorioRec(raiz.getDireito(), novoDir);
+                    return;
+                }else{
+                    raiz.setDireito(novoDir);
+                }
+            }
+            
         }
         
-        if(chave.compareTo(atual.getChave()) < 0){
-            atual.setEsquerdo(addDiretorioRec(raiz.getEsquerdo(), chave, atual));
-        }else if(chave.compareTo(atual.getChave()) > 0){
-            atual.setDireito(addDiretorioRec(raiz.getDireito(), chave, atual));
-        }
+        novoDir.setCor(vermelho);
+        novoDir.setPai(raiz);
         
-        return atual;
+        balanceiaRN(novoDir);
     }
     
-    public void addArquivo(String chave){ //Serve mais para chamar o metodo recursivo
-        this.raiz = addArquivoRec(this.raiz, chave, null);
+    public void addArquivo(String chave){
+        Arquivo novoArq = new Arquivo(chave);
+        
+        addArquivoRec(this.raiz, novoArq);
+        
+        while(getPai(novoArq) != null){
+            novoArq = getPai(novoArq);
+        }
+        
+        this.raiz = novoArq;
     }
     
-    private Arquivo addArquivoRec(Arquivo raiz, String chave, Arquivo pai){
-        Arquivo atual = raiz;
-        
-        if(atual == null){ //Não existe, então cria um novo Arquivo
-            atual = new Arquivo(chave);
-            atual.setCor(vermelho);
-            atual.setPai(pai);
-            balanceiaRN(atual);
-            return atual;
+    private void addArquivoRec(Arquivo raiz, Arquivo novoArq){
+        if(raiz != null){
+            if(novoArq.compareTo(raiz) < 0){
+                if(raiz.getEsquerdo() != null){
+                    addArquivoRec(raiz.getEsquerdo(), novoArq);
+                    return;
+                }else{
+                    raiz.setEsquerdo(novoArq);
+                }
+            }else{
+                if(raiz.getDireito()!= null){
+                    addArquivoRec(raiz.getDireito(), novoArq);
+                    return;
+                }else{
+                    raiz.setDireito(novoArq);
+                }
+            }
+            
         }
         
-        if(chave.compareTo(atual.getChave()) < 0){
-            atual.setEsquerdo(addArquivoRec(raiz.getEsquerdo(), chave, atual));
-        }else if(chave.compareTo(atual.getChave()) > 0){
-            atual.setDireito(addArquivoRec(raiz.getDireito(), chave, atual));
-        }
+        novoArq.setCor(vermelho);
+        novoArq.setPai(raiz);
         
-        return atual;
+        balanceiaRN(novoArq);
     }
     
     public Arquivo interpretaPath(String path){ //Serve mais para chamar o metodo recursivo
@@ -274,14 +302,16 @@ public class ArvoreRN {
         auxPrintArvore(raiz);    
     }
 
-    private static void auxPrintArvore(Arquivo raiz) {
+    private static void auxPrintArvore(Arquivo raiz) {        
         if(raiz.getEsquerdo() != null){
             auxPrintArvore(raiz.getEsquerdo());
         }
+        
         System.out.println(raiz.getChave());
+        
         if(raiz.getDireito() != null){
             auxPrintArvore(raiz.getDireito());
-        }
+        }       
     }
     
     public void procuraChave(String caminho, String chave){
