@@ -109,10 +109,10 @@ public class ArvoreRN {
             
             //Esses casos se aplicam se quando o nó está sendo o filho interno, então faz uma troca de posição
             if(arq.equals(pai.getDireito()) && pai.equals(vo.getEsquerdo())){
-                rotacaoEsquerda(arq);
+                rotacaoEsquerda(pai);
                 arq = arq.getEsquerdo();
             }else if(arq.equals(pai.getEsquerdo()) && pai.equals(vo.getDireito())){
-                rotacaoDireita(arq);
+                rotacaoDireita(pai);
                 arq = arq.getDireito();
             }
             
